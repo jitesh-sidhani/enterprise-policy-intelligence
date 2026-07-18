@@ -1,120 +1,6 @@
 import gradio as gr
 
-from agents.generator import get_llm
-from agents.retriever import retrieve_context
-from agents.router import route_question
-from agents.safety import safety_check
-from agents.verifier import verify_answer
-
-def ask(question):
-
-    print("=" * 60)
-    print("QUESTION:", question)
-
-    # -----------------------------
-    # 1. Safety Agent
-    # -----------------------------
-    safe, reason = safety_check(question)
-
-    if not safe:
-        return f"❌ {reason}"
-
-    # -----------------------------
-    # 2. Router Agent
-    # -----------------------------
-    department = route_question(question)
-
-    # -----------------------------
-    # 3. Retriever Agent
-    # -----------------------------
-    context = retrieve_context(question)
-
-    # print("\n================ CONTEXT ================\n")
-    # print(context)
-    # print("\n==========================================\n")
-
-    # -----------------------------
-    # 4. Generator Agent
-    # -----------------------------
-    llm = get_llm()
-
-    prompt = f"""
-You are an Enterprise Policy Assistant.
-
-The Router Agent classified this question as:
-
-Department: {department}
-
-Your job is to answer ONLY using the retrieved policy context.
-
-Rules:
-
-- Never use outside knowledge.
-- Never guess.
-- Never invent company policies.
-- If the retrieved context does not contain enough information,
-  reply exactly:
-
-"I couldn't find this information in the uploaded policy."
-
-Retrieved Context:
-{context}
-
-User Question:
-{question}
-"""
-
-    # print(prompt)
-
-    response = llm.invoke(prompt)
-
-    # print(response.content)
-
-    answer = response.content.strip()
-
-# -----------------------------
-# 5. Verifier Agent
-# -----------------------------
-    verification = verify_answer(
-        question=question,
-        context=context,
-        answer=answer
-    )
-
-    if verification.verified:
-        final_answer = answer
-    else:
-        final_answer = f"""
-⚠️ Verification Failed
-
-Generated Answer:
-{answer}
-
-Reason:
-{verification.reason}
-"""
-
-
-# -----------------------------
-# Final Response
-# -----------------------------
-
-    return f"""
-### 🏢 Department
-**{department}**
-
----
-
-### {"✅ Verified" if verification.verified else "❌ Verification Failed"}
-
-**Reason:** {verification.reason}
-
----
-
-### 💬 Answer
-
-{final_answer}
-"""
+from policy_service import ask
 
 
 css = """
@@ -142,19 +28,12 @@ button {
 
 #question-card,
 #response-card {
-
     border-radius: 16px;
-
     border: 1px solid #3b3b45;
-
     padding: 18px;
-
     background: #23232b;
 }
 """
-
-
-
 
 
 with gr.Blocks(
@@ -199,39 +78,32 @@ Powered by RAG • LangChain • Groq • FAISS
                     clear = gr.Button("Clear", variant="secondary")
                     submit = gr.Button("Submit", variant="primary")
 
-            
-            with gr.Group(elem_id="pipeline-card"):
+            with gr.Group():
                 gr.Markdown("## 🤖 Agent Pipeline")
                 gr.Markdown("""
 🟢 **Safety Agent**
-- Checks if the question is safe and policy-related.
 
 ⬇️
 
 🟢 **Router Agent**
-- Classifies the question into the correct department.
 
 ⬇️
 
 🟢 **Retriever Agent**
-- Retrieves relevant policy context using semantic search.
 
 ⬇️
 
 🟢 **Generator Agent**
-- Generates an answer only from the retrieved context.
 
 ⬇️
 
 🟢 **Verifier Agent**
-- Verifies the answer against the retrieved policy.
 """)
-
 
         # Right Column
         with gr.Column(scale=1):
 
-            with gr.Group(elem_id="question-card"):
+            with gr.Group(elem_id="response-card"):
 
                 gr.Markdown("## 🤖 AI Response")
 
@@ -244,7 +116,6 @@ Powered by RAG • LangChain • Groq • FAISS
                 variant="secondary"
             )
 
-    # Event handlers
     submit.click(
         fn=ask,
         inputs=question,
@@ -262,12 +133,5 @@ Powered by RAG • LangChain • Groq • FAISS
         outputs=[question, output]
     )
 
-# demo.launch()
 
-import os
-
-demo.launch(
-    server_name="0.0.0.0",
-    server_port=int(os.environ.get("PORT", 7860)),
-    show_error=True
-)
+demo.launch()

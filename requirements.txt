@@ -8,3 +8,6 @@ sentence-transformers
 pymupdf
 python-dotenv
 pydantic
+streamlit
+torch
+torchvision
