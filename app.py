@@ -8,6 +8,9 @@ from agents.verifier import verify_answer
 
 def ask(question):
 
+    print("=" * 60)
+    print("QUESTION:", question)
+
     # -----------------------------
     # 1. Safety Agent
     # -----------------------------
