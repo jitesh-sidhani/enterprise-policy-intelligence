@@ -1,4 +1,4 @@
-gradio
+gradio==5.34.2
 langchain
 langchain-community
 langchain-huggingface
