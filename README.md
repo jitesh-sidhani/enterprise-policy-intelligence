@@ -97,7 +97,7 @@ streamlit run streamlit_app.py
 
 ## Live Demo
 
-👉 https://YOUR-STREAMLIT-LINK.streamlit.app
+👉 [https://YOUR-STREAMLIT-LINK.streamlit.app](https://enterprise-policy-intelligence-hdqrtitprgagnmhlzlhvt8.streamlit.app/)
 
 ---
 
